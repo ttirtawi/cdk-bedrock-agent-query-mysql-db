@@ -10,7 +10,7 @@ In this demo we will show how to use Agents for Amazon Bedrock interact with MyS
 
 This CDK stack already prepared some of the components below:
 1. VPC with public and private subnets.
-2. RDS MySQL Database with preloaded tables and data (loaded using Custom Resource + Lambda).
+2. RDS MySQL Database with preloaded tables and data (loaded using Custom Resource + Lambda). I use sample data from [this repo](https://github.com/datacharmer/test_db).
 3. Lambda function to be called by Bedrock Agent.
 4. (not shown in the diagram) EC2 instances for validating the initial data loading.
 
