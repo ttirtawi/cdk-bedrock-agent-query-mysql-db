@@ -7,6 +7,8 @@ import * as rds from 'aws-cdk-lib/aws-rds';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as customresource from 'aws-cdk-lib/custom-resources';
+import * as apigw from 'aws-cdk-lib/aws-apigatewayv2';
+import * as apigwintegration from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { readFileSync } from 'fs';
 
 export class CdkBedrockAgentQueryMysqlStack extends cdk.Stack {
@@ -220,6 +222,60 @@ export class CdkBedrockAgentQueryMysqlStack extends cdk.Stack {
       sourceArn: `arn:aws:bedrock:${this.region}:${this.account}:agent/*`
     });
 
+    // create lambda to call bedrock agent using python 3.12
+    const lambdaCallBedrockAgent = new lambda.Function(this, 'lambdaCallBedrockAgent', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset('lambdaCallBedrockAgent'),
+      handler: 'app.lambda_handler',
+      environment: {
+        // will update environment variable later after we configured Bedrock Agent
+        agent_id: 'xxxxx',
+        agent_alias_id: 'xxxxx',
+        region_name: this.region
+      },
+      role: new iam.Role(this, 'lambdaCallBedrockAgentRole', {
+        assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+        managedPolicies: [
+          iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+        ],
+        inlinePolicies: {
+          'InvokeBedrockAgent': new iam.PolicyDocument({
+            statements: [
+              new iam.PolicyStatement({
+                actions: [
+                  "bedrock-agent-runtime:*",
+                  "bedrock-runtime:*",
+                  "bedrock:*"
+                ],
+                resources: ['*'],
+              }),
+            ],
+          }),
+        }
+      }),
+      layers: [ lambdaLayer ],
+      timeout: cdk.Duration.seconds(600),
+      architecture: lambda.Architecture.ARM_64,
+      memorySize: 256
+    })
+
+    // create HTTP api to call lambda function with GET method with querystring variable named "prompt"
+    const api = new apigw.HttpApi(this, 'ApiGateway', {
+      createDefaultStage: true,
+      description: 'HTTP API to call lambda function with Bedrock Agent',
+    });
+    const integration = new apigwintegration.HttpLambdaIntegration(
+      'LambdaIntegration',
+      lambdaCallBedrockAgent
+    );
+    api.addRoutes({
+      path: '/query',
+      methods: [apigw.HttpMethod.GET],
+      integration: integration
+    })  
+
+    // output api gateway endpoint
+    new cdk.CfnOutput(this, 'APIGatewayEndpoint', {value: api.apiEndpoint});
     // output vpc id
     new cdk.CfnOutput(this, 'VPCId', {value: vpc.vpcId});
     // output rds endpoint
