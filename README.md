@@ -15,6 +15,55 @@ This CDK stack already prepared some of the components below:
 4. (not shown in the diagram) EC2 instances for validating the initial data loading.
 
 
+## 🚀 Deploy CDK Stack
+
+Let's complete some prerequisite below:
+
+1. Install AWS CLI as described in [this document](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). 
+
+2. Install NodeJS (refer to [this link](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html) for complete tutorial)
+
+    ```
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+    . ~/.nvm/nvm.sh
+    nvm install node
+    ```
+
+    Verify node installation using this command:
+    ```  
+    node -e "console.log('Running Node.js ' + process.version)"
+    ```
+
+3. Install AWS CDK as described in [this document](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html). We will use AWS CDK version 2.
+
+    ```
+    npm install -g aws-cdk
+    ```
+
+    As I write this document, CDK v2 latest version is 2.146.0. Test your CDK installation using the following command:
+
+    ```
+    cdk --version
+    ```
+
+4. You also need AWS credentials (using IAM access/secret key or using EC2 instance role). Use `aws configure` to setup default AWS region & access/secret key. Please remember that your account/role must have sufficient permission to provison AWS resources (e.g. `AdministratorAccess`).
+
+5. It is recommended to use code editor like Visual Code Studio to navigate the CDK's modules easily.
+
+
+Make sure you deploy the environment in the AWS Region where Amazon Bedrock with Anthropic Claude3 Haiku is available. Follow these steps to deploy the stack to AWS region:
+
+1. Run `cdk bootstrap` to prepare initial resource which will be used by CDK to provision our stack. This step will create new CloudFormation stack named `CDKToolkit` that will include S3 bucket creation and IAM role setup (by default it will use your AWS profile privileges, you can optionally define different set of IAM policies for the CDK). Bootstrap process must be done in each region you want to use.
+2. Run `cdk synth` to let CDK generate CloudFormation template based on our stack.
+3. To deploy CDK stack run the following command. 
+
+    ```
+    cdk deploy 
+    ```
+
+4. It will takes 15-20 minutes to complete the deployment. The longest step is to create RDS MySQL database and load the sample data.
+5. Go ahead to see my recording video explaining step-by-step of setup Agent for Amazon Bedrock.
+
 ## Agent setup preparation
 
 For the Agent, we will use the following information:

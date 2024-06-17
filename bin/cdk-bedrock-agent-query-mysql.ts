@@ -7,7 +7,7 @@ const app = new cdk.App();
 new CdkBedrockAgentQueryMysqlStack(app, 'CdkBedrockAgentQueryMysqlStack', {
   description: 'Demo Bedrock Agent to query RDS MySQL',
   env: {
-    region: 'ap-southeast-2',
-    account: '452922823873'
+    region: process.env.CDK_DEFAULT_REGION,
+    account: process.env.CDK_DEFAULT_ACCOUNT,
   }
 });
